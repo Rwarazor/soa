@@ -1,0 +1,17 @@
+@startuml
+
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+title Social network context diagram
+
+System(socialNetwork, "Social network", "Contains users, posts, comments, likes. Can provide statistics about likes and views.")
+
+Person(user, "User", "Social network user")
+Rel(user, socialNetwork, "Uses through web/mobile app:\n -Registers and logins\n - Makes and reads posts and comments\n - Likes posts")
+
+Person_Ext(admin, "Administrator", "Social network administrator/moderator")
+Rel(admin, socialNetwork, "Moderates through separate web interface")
+
+SHOW_LEGEND()
+
+@enduml
