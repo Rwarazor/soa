@@ -1,0 +1,91 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title Диаграмма сущностей социальной сети
+
+skinparam linetype polyline
+
+package "Main Service" <<Rectangle>> {
+
+    entity User {
+    *id : int
+    --
+    *user_login : varchar(64)
+    --
+    *password_salt : varchar(64)
+
+    *password_hash : string
+    }
+
+}
+
+package "Post Service" <<Rectangle>> {
+
+    entity Post {
+        *id : int
+        --
+        *user_id : int
+        --
+        *contents : string
+        --
+        *created_at : time
+    }
+
+    entity Comment {
+        *id : int
+        *user_id : int
+        *post_id : int
+        --
+        *reply_to : optional[int]
+        --
+        *contents : string
+        --
+        *created_at : time
+    }
+
+
+}
+
+
+package "Statistic Service" <<Rectangle>> {
+
+    entity CommentLike {
+        *user_id : int
+        *comment_id : int
+        --
+        *type : [dislike|none|like]
+        --
+        *last_updated : time
+    }
+
+    entity PostLike {
+        *user_id : int
+        *post_id : int
+        --
+        *type : [dislike|none|like]
+        --
+        *last_updated : time
+    }
+
+    entity View {
+        *user_id : int
+        *post_id : int
+        --
+        *at : time
+    }
+
+}
+
+User ||--o{ Comment : author
+User ||--o{ Post : author
+User ||--o{ PostLike : owner
+User ||--o{ CommentLike : owner
+User ||--o{ View : owner
+
+View }o--|| Post : of what
+PostLike }o--|| Post : to what
+CommentLike }o--|| Post : to what
+Comment }o--|| Post : to what
+
+Comment ||--o| Comment : replies to
+@enduml
