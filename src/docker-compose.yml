@@ -1,0 +1,23 @@
+services:
+  user-service-db:
+    image: redis:alpine
+    container_name: user-service-db
+    volumes:
+      - $PWD/redis-data:/var/lib/redis
+    ports:
+      - 6379:6379
+    networks:
+      - user-service-network
+  user-service:
+    build: user-service
+    container_name: user-service
+    ports:
+      - 5000:5000
+    depends_on:
+      - user-service-db
+    networks:
+      - user-service-network
+
+networks:
+  user-service-network:
+    driver: bridge
