@@ -1,0 +1,177 @@
+openapi: 3.0.3
+info:
+  title: Rwarazor - SOA
+  description: ''
+  version: 0.0.1
+externalDocs:
+  url: https://github.com/Rwarazor/soa
+servers:
+  - url: 'http://127.0.0.1:5000'
+tags:
+  - name: auth
+    description: Authorization operations
+  - name: user
+    description: User operations
+security:
+  - bearerHttpAuthentication: []
+paths:
+  /register:
+    post:
+      tags:
+        - auth
+      description: Register a new user, given login and password. Also acts as login operation. Returns token, which can be used to authorize requests
+      security: []
+      requestBody:
+        $ref: '#/components/requestBodies/Login'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthToken'
+        '400':
+          description: Invalid login or password used
+        '409':
+          description: Login already in use
+        '500':
+          description: Internal server error
+  /login:
+    post:
+      tags:
+        - auth
+      description: Log in using login and password. Returns token, which can be used to authorize requests
+      security: []
+      requestBody:
+        $ref: '#/components/requestBodies/Login'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthToken'
+        '400':
+          description: Invalid login or password used.
+        '401':
+          description: Incorrect password or login doesn't exist
+        '500':
+          description: Internal server error
+  /user/me/info:
+    get:
+      tags:
+        - user
+      summary: Get info about yourself
+      description: Get user info about currently logged in user
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserInfo'
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal server error
+    put:
+      tags:
+        - user
+      summary: Update your info
+      operationId: updateUser
+      requestBody:
+        description: Update user info of currently logged in user. All fields are optional.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MutableUserInfo'
+        required: True
+      responses:
+        '200':
+          description: OK
+        '400':
+          description: Invalid data (i.e. wrong phone number or email format)
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal server error
+  /user/{id}/info:
+    get:
+      tags:
+        - user
+      description: Get user info about a certain user
+      parameters:
+        - name: id
+          in: path
+          description: 'id of the user we are interested in'
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+        '400':
+          description: Invalid user id
+        '401':
+          description: Unauthorized
+        '404':
+          description: User not found
+        '500':
+          description: Internal server error
+components:
+  schemas:
+    UserInfo:
+      allOf:
+        - type: object
+          properties:
+            id:
+              type: integer
+              format: int64
+              example: 10
+        - $ref: '#/components/schemas/MutableUserInfo'
+    MutableUserInfo:
+      type: object
+      properties:
+        firstName:
+          type: string
+          example: John
+        lastName:
+          type: string
+          example: James
+        birthDate:
+          type: string
+          format: date
+          example: "2024-06-15"
+        email:
+          type: string
+          format: email
+          example: john@email.com
+        phone:
+          type: string
+          example: '79991234567'
+    AuthToken:
+      type: object
+      properties:
+        token:
+          type: string
+          example: "a0b1c2d3e4567890"
+  requestBodies:
+    Login:
+      description: Login information
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              login:
+                type: string
+                example: rwarazor
+              password:
+                type: string
+                example: qwerty123
+      required: true
+  securitySchemes:
+    bearerHttpAuthentication:
+      description: Authentication token
+      type: http
+      scheme: Bearer
