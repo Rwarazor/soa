@@ -1,12 +1,10 @@
-FROM python:3.10-alpine
+FROM python:3.10
 
-WORKDIR /user-service
+WORKDIR /stats-service
 
 COPY requirements.txt ./
 RUN pip install -r requirements.txt
 
 COPY . ./
-
-ENV PYTHONPATH "${PYTHONPATH}:./generated"
 
 CMD ["python", "./app.py"]
