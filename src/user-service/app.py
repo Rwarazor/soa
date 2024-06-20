@@ -116,9 +116,9 @@ def _info_get(id):
 
 @app.get('/user/<id>/info')
 def info_get(id):
-    token = request.authorization.token
-    if token is None:
+    if request.authorization is None or request.authorization.token is None:
         return {"error": "Unauthorized"}, 401
+    token = request.authorization.token
     my_id = validate_token(token)
     if my_id is None:
         return {"error": "Unauthorized"}, 401
@@ -127,9 +127,9 @@ def info_get(id):
 
 @app.get('/user/me/info')
 def my_info_get():
-    token = request.authorization.token
-    if token is None:
+    if request.authorization is None or request.authorization.token is None:
         return {"error": "Unauthorized"}, 401
+    token = request.authorization.token
     my_id = validate_token(token)
     if my_id is None:
         return {"error": "Unauthorized"}, 401
@@ -149,9 +149,9 @@ data_rules = {
 def my_info_put():
     if not request.is_json:
         return {"error": "Request must be JSON"}, 415
-    token = request.authorization.token
-    if token is None:
+    if request.authorization is None or request.authorization.token is None:
         return {"error": "Unauthorized"}, 401
+    token = request.authorization.token
     id = validate_token(token)
     if id is None:
         return {"error": "Unauthorized"}, 401
@@ -171,9 +171,9 @@ def my_info_put():
 def create_post():
     if not request.is_json:
         return {"error": "Request must be JSON"}, 415
-    token = request.authorization.token
-    if token is None:
+    if request.authorization is None or request.authorization.token is None:
         return {"error": "Unauthorized"}, 401
+    token = request.authorization.token
     id = validate_token(token)
     if id is None:
         return {"error": "Unauthorized"}, 401
@@ -190,9 +190,9 @@ def create_post():
 
 @app.get('/posts/<id>')
 def get_post(id):
-    token = request.authorization.token
-    if token is None:
+    if request.authorization is None or request.authorization.token is None:
         return {"error": "Unauthorized"}, 401
+    token = request.authorization.token
     my_id = validate_token(token)
     if my_id is None:
         return {"error": "Unauthorized"}, 401
@@ -211,9 +211,9 @@ def get_post(id):
 def update_post(id):
     if not request.is_json:
         return {"error": "Request must be JSON"}, 415
-    token = request.authorization.token
-    if token is None:
+    if request.authorization is None or request.authorization.token is None:
         return {"error": "Unauthorized"}, 401
+    token = request.authorization.token
     my_id = validate_token(token)
     if my_id is None:
         return {"error": "Unauthorized"}, 401
@@ -237,9 +237,9 @@ def update_post(id):
 
 @app.delete('/posts/<id>')
 def delete_post(id):
-    token = request.authorization.token
-    if token is None:
+    if request.authorization is None or request.authorization.token is None:
         return {"error": "Unauthorized"}, 401
+    token = request.authorization.token
     my_id = validate_token(token)
     if my_id is None:
         return {"error": "Unauthorized"}, 401
@@ -259,9 +259,9 @@ def delete_post(id):
 
 @app.get('/posts/feed')
 def get_feed():
-    token = request.authorization.token
-    if token is None:
+    if request.authorization is None or request.authorization.token is None:
         return {"error": "Unauthorized"}, 401
+    token = request.authorization.token
     my_id = validate_token(token)
     if my_id is None:
         return {"error": "Unauthorized"}, 401
