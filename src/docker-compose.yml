@@ -1,27 +1,64 @@
 services:
   user-service-db:
     image: redis:alpine
-    container_name: user-service-db
     volumes:
-      - redis-data:/data
+      - auth-data:/data
     ports:
       - 6379:6379
     networks:
       - user-service-network
   user-service:
     build: user-service
-    container_name: user-service
     ports:
       - 5000:5000
     depends_on:
       - user-service-db
     networks:
       - user-service-network
+      - services-network
+
+  post-service-db:
+    image: postgres
+    restart: always
+    shm_size: 128mb
+    environment:
+      - POSTGRES_PASSWORD=228322
+    networks:
+      - post-service-network
+    volumes:
+      - post-data:/var/lib/postgresql/data
+
+  post-service-adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 8080:8080
+    networks:
+      - post-service-network
+
+  post-service:
+    build: post-service
+    ports:
+      - 50051:50051
+    depends_on:
+      - post-service-db
+    networks:
+      - post-service-network
+      - services-network
 
 networks:
   user-service-network:
     driver: bridge
 
+  post-service-network:
+    driver: bridge
+
+  services-network:
+    driver: bridge
+
 volumes:
-  redis-data:
+  auth-data:
+    driver: local
+
+  post-data:
     driver: local

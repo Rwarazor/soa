@@ -12,6 +12,8 @@ tags:
     description: Authorization operations
   - name: user
     description: User operations
+  - name: post
+    description: Posts operations
 security:
   - bearerHttpAuthentication: []
 paths:
@@ -106,16 +108,173 @@ paths:
           description: 'id of the user we are interested in'
           required: true
           schema:
-            type: string
+            type: integer
       responses:
         '200':
           description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserInfo'
         '400':
           description: Invalid user id
         '401':
           description: Unauthorized
         '404':
           description: User not found
+        '500':
+          description: Internal server error
+  /posts/create:
+    post:
+      tags:
+        - post
+      summary: Create a new post
+      requestBody:
+        description: New post's contents
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                content:
+                  type: string
+                  example: This is a new post!
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    example: 2
+        '400':
+          description: Invalid contents
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal server error
+  /posts/{id}:
+    get:
+      tags:
+        - post
+      summary: Get a specific post
+      parameters:
+        - name: id
+          in: path
+          description: 'id of the post we are interested in'
+          required: true
+          example: 2
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Post'
+        '400':
+          description: Invalid post id
+        '401':
+          description: Unauthorized
+        '404':
+          description: Post not found
+        '500':
+          description: Internal server error
+    put:
+      tags:
+        - post
+      summary: Update an existing post
+      parameters:
+        - name: id
+          in: path
+          description: 'id of the post we are trying to update'
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        description: Updated contents
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                content:
+                  type: string
+                  example: This is an updated post!
+        required: true
+      responses:
+        '200':
+          description: OK
+        '400':
+          description: Invalid parameters
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (trying to update someone else's post)
+        '404':
+          description: Post not found
+        '500':
+          description: Internal server error
+    delete:
+      tags:
+        - post
+      summary: Delete an existing post
+      parameters:
+        - name: id
+          in: path
+          description: 'id of the post we are trying to delete'
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: OK
+        '400':
+          description: Invalid id
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (trying to delete someone else's post)
+        '404':
+          description: Post not found
+        '500':
+          description: Internal server error
+  /posts/feed:
+    get:
+      tags:
+        - post
+      summary: Get latest posts
+      parameters:
+        - name: page
+          in: query
+          example: 0
+          schema:
+            type: integer
+          description: "Optional, default value: 0"
+        - name: size
+          in: query
+          example: 50
+          schema:
+            type: integer
+          description: "Page size, optional, default value: 50"
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostsArray'
+        '400':
+          description: Invalid parameters
+        '401':
+          description: Unauthorized
+        '404':
+          description: Page doesn't exist (there are too little posts total)
         '500':
           description: Internal server error
 components:
@@ -155,6 +314,26 @@ components:
         token:
           type: string
           example: "a0b1c2d3e4567890"
+    Post:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 2
+        authorId:
+          type: integer
+          example: 1
+        createdAt:
+          type: string
+          format: datetime
+          example: "2024-06-20 05:04:03"
+        content:
+          type: string
+          example: "This is a post!"
+    PostsArray:
+      type: array
+      items:
+        $ref: '#/components/schemas/Post'
   requestBodies:
     Login:
       description: Login information
