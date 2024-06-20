@@ -6,13 +6,18 @@ import secrets
 import json
 from collections import defaultdict
 import re
+import requests
 
 from post_service_client import PostServiceClient
+
+from kafka import KafkaProducer
 
 r = redis.Redis(host='user-service-db', port=6379, db=0)
 app = Flask(__name__)
 
 ps_client = PostServiceClient()
+
+kafka_producer = KafkaProducer(bootstrap_servers='stat-kafka:9092', value_serializer=lambda v: json.dumps(v).encode())
 
 def verify_login_or_password(str):
     for c in str:
@@ -284,6 +289,107 @@ def get_feed():
         # page > 0 because if there are no posts at all and user asks for first page we shouldn't throw error
         return {"error": "Page doesn't exist"}, 404
     return result
+
+
+@app.put('/posts/<id>/like')
+def like_post(id):
+    if request.authorization is None or request.authorization.token is None:
+        return {"error": "Unauthorized"}, 401
+    token = request.authorization.token
+    my_id = validate_token(token)
+    if my_id is None:
+        return {"error": "Unauthorized"}, 401
+
+    if not id.isdigit():
+        return {"error": "Id must be integer"}, 400
+    id = int(id)
+
+    post = ps_client.GetPost(id)
+    if post is None:
+        return {"error": "Post not found"}, 404
+
+    kafka_producer.send("events", {
+        "user_id": my_id,
+        "post_id": id,
+        "author_id": post["authorId"],
+        "type": "like"
+    })
+
+    return ""
+
+
+@app.put('/posts/<id>/view')
+def view_post(id):
+    if request.authorization is None or request.authorization.token is None:
+        return {"error": "Unauthorized"}, 401
+    token = request.authorization.token
+    my_id = validate_token(token)
+    if my_id is None:
+        return {"error": "Unauthorized"}, 401
+
+    if not id.isdigit():
+        return {"error": "Id must be integer"}, 400
+    id = int(id)
+
+    post = ps_client.GetPost(id)
+    if post is None:
+        return {"error": "Post not found"}, 404
+
+    kafka_producer.send("events", {
+        "user_id": my_id,
+        "post_id": id,
+        "author_id": post["authorId"],
+        "type": "view"
+    })
+
+    return ""
+
+
+@app.get('/posts/<id>/stats')
+def get_stats(id):
+    if request.authorization is None or request.authorization.token is None:
+        return {"error": "Unauthorized"}, 401
+    token = request.authorization.token
+    my_id = validate_token(token)
+    if my_id is None:
+        return {"error": "Unauthorized"}, 401
+
+    if not id.isdigit():
+        return {"error": "Id must be integer"}, 400
+    id = int(id)
+
+    post = ps_client.GetPost(id)
+    if post is None:
+        return {"error": "Post not found"}, 404
+
+    response = requests.get(f"http://stat-service:5000/posts/{id}/stats")
+    return response.json()
+
+
+@app.get('/posts/top')
+def top_posts():
+    if request.authorization is None or request.authorization.token is None:
+        return {"error": "Unauthorized"}, 401
+    token = request.authorization.token
+    id = validate_token(token)
+    if id is None:
+        return {"error": "Unauthorized"}, 401
+
+    response = requests.get(f"http://stat-service:5000/posts/top")
+    return response.json()
+
+
+@app.get('/users/top')
+def tops_users():
+    if request.authorization is None or request.authorization.token is None:
+        return {"error": "Unauthorized"}, 401
+    token = request.authorization.token
+    id = validate_token(token)
+    if id is None:
+        return {"error": "Unauthorized"}, 401
+
+    response = requests.get(f"http://stat-service:5000/users/top")
+    return response.json()
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')
